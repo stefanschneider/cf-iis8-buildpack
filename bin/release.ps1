@@ -1,5 +1,5 @@
 ﻿@"
 ---
-default_process_type:
+default_process_types:
   web: iishwc\start.bat
 "@

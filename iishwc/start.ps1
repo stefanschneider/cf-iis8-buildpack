@@ -1,8 +1,10 @@
-$script:scriptPath = Join-Path $env:HOME iishwc
+$script:scriptPath = $PSScriptRoot
+$script:homePath = $env:CONTAINERPATH
+
 $script:appPoolName = [Guid]::NewGuid().ToString()
 $script:appPort = $Env:PORT
 $script:appPath = (get-item $script:scriptPath).parent.FullName
-$script:logsDir = Join-Path $env:HOMEPATH logs
+$script:logsDir = Join-Path $script:homePath logs
 $script:exitCode = 0
 
 function DetectBitness()
@@ -23,23 +25,23 @@ function DetectBitness()
             Write-Host("Could not detect bitness for assembly $($assembly.Name)");
             $kind = [System.Reflection.PortableExecutableKinds]"NotAPortableExecutableImage"
         }
-		
+
 		switch ($kind)
 		{
 			[System.Reflection.PortableExecutableKinds]::Required32Bit
 			{
                 Write-Host("Application requires a 32bit enabled application pool");
-				return ,$true;                
-			}			
+				return ,$true;
+			}
 			([System.Reflection.PortableExecutableKinds]([System.Reflection.PortableExecutableKinds]::Required32Bit -bor [System.Reflection.PortableExecutableKinds]::ILOnly))
 			{
                 Write-Host("Application requires a 32bit enabled application pool");
 				return ,$true;
 			}
 			default { }
-		}			  		
+		}
 	}
-	
+
     Write-Host("Application does not require a 32bit enabled application pool");
 	return $false
 }
@@ -99,12 +101,12 @@ function AddSite([ref]$applicationHost, $appName)
 function AddBinding([ref]$applicationHost)
 {
     Write-Host("Adding http bindings for application")
-	$bindings = $applicationHost.Value.CreateElement("bindings")	
+	$bindings = $applicationHost.Value.CreateElement("bindings")
 	$element = $applicationHost.Value.CreateElement("binding")
 	$element.SetAttribute('protocol', "http")
-	$element.SetAttribute("bindingInformation", [String]::Format("*:{0}:", $script:appPort ))	
+	$element.SetAttribute("bindingInformation", [String]::Format("*:{0}:", $script:appPort ))
 	$null = $bindings.AppendChild($element)
-	$null = $applicationHost.Value.configuration."system.applicationHost".sites.site.AppendChild($bindings)	
+	$null = $applicationHost.Value.configuration."system.applicationHost".sites.site.AppendChild($bindings)
 }
 
 function AddApplication([ref]$applicationHost)
@@ -117,7 +119,7 @@ function AddApplication([ref]$applicationHost)
 	$virtualDirectory.SetAttribute('path', '/')
 	$virtualDirectory.SetAttribute('physicalPath', $script:appPath)
 	$null = $application.AppendChild($virtualDirectory)
-	$null = $applicationHost.Value.configuration."system.applicationHost".sites.site.AppendChild($application)	
+	$null = $applicationHost.Value.configuration."system.applicationHost".sites.site.AppendChild($application)
 }
 
 $applicationHostTemplatePath = Join-Path $script:scriptPath 'applicationHostTemplate.config'
@@ -142,15 +144,18 @@ foreach ($file in $configFiles)
     foreach ($serviceName in $vcap_services | Get-Member -MemberType NoteProperty) {
         foreach($service in $vcap_services."$($serviceName.Name)") {
             foreach($property in $service.credentials | Get-Member -MemberType NoteProperty) {
-                $content = Get-Content($file.PSPath)                
-                $content | Foreach-Object {$_ -replace "{$($service.name)#$($property.Name)}", $service.credentials."$($property.Name)"} | 
+                $content = Get-Content($file.PSPath)
+                $content | Foreach-Object {$_ -replace "{$($service.name)#$($property.Name)}", $service.credentials."$($property.Name)"} |
                 Set-Content $file.PSPath
             }
         }
-    }        
+    }
 }
 
-$null = mkdir (Join-Path $env:TEMP "IIS Temporary Compressed Files")
+$null = mkdir -force $script:logsDir
+$null = mkdir -force (Join-Path $script:appPath "logs")
+$null = mkdir -force (Join-Path $script:homePath "tmp")
+$null = mkdir -force (Join-Path $script:homePath "tmp\IIS Temporary Compressed Files")
 
 Write-Host("Starting IIS Process")
 

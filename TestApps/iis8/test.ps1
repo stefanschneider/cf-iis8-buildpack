@@ -5,8 +5,8 @@ $env:VCAP_WINDOWS_USER="user"
 $env:VCAP_WINDOWS_USER_PASSWORD="pass"
 $env:VCAP_SERVICES="{}"
 
-$env:HOME=split-path $SCRIPT:MyInvocation.MyCommand.Path
-$env:HOMEPATH=$($env:HOME | join-path -childpath "..\.." | resolve-path).path
+$testappPath=split-path $SCRIPT:MyInvocation.MyCommand.Path
+$buildpackPath=$($testappPath | join-path -childpath "..\.." | resolve-path).path
 
 Start-Process -FilePath "TestApps\iis8\iishwc\start.bat" -PassThru
 
@@ -43,7 +43,7 @@ while( $Success -eq $false )
 function test_killIIS
 {
 echo "Killing iis process"
-foreach ($ppid in $(gwmi win32_process | select ProcessID, CommandLine | Where-Object { $_.CommandLine -like "${env:HOMEPATH}*" } | select ProcessID)) 
+foreach ($ppid in $(gwmi win32_process | select ProcessID, CommandLine | Where-Object { $_.CommandLine -like "${buildpackPath}*" } | select ProcessID))
   {
   Stop-Process -force -id $ppid.ProcessID
   }
@@ -83,6 +83,10 @@ function test_release
 
   echo "Release is ok"
 }
+
+$testappPath=split-path $SCRIPT:MyInvocation.MyCommand.Path
+$buildpackPath=$($testappPath | join-path -childpath "..\.." | resolve-path).path
+cd $buildpackPath
 
 test_detect
 test_release

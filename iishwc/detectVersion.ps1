@@ -1,5 +1,6 @@
-$script:scriptPath = Join-Path $env:HOME iishwc
+$script:scriptPath = $PSScriptRoot
 $script:appPath = (get-item $script:scriptPath).parent.FullName
+$script:homePath = $env:CONTAINERPATH
 
 $applicationHostPath = Join-Path $script:scriptPath 'applicationHost.config'
 $webConfig = New-Object System.Xml.XmlDocument
@@ -35,7 +36,7 @@ $rootWebConfigPath = Join-Path $script:scriptPath $rootWebConfigFileName
 
 $rootWebConfig = New-Object System.Xml.XmlDocument
 $rootWebConfig.Load($rootWebConfigPath)
-$tmpPath = Join-Path $env:HOMEPATH "tmp"
+$tmpPath = Join-Path $script:homePath "tmp"
 $compilationPath = Join-Path $tmpPath "aspnet_compilation"
 
 $element = $rootWebConfig.SelectSingleNode("configuration/system.web/compilation")
