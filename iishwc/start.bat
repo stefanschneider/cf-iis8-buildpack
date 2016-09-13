@@ -12,14 +12,14 @@ set version=%ERRORLEVEL%
 
 IF %bitness% EQU 0 (
     IF %version% EQU 40 (
-        %~dp0\iishwcx64.exe %~dp0applicationHost.config %~dp0rootWeb4064.config %PORT%
+        %~dp0\iishwcx64.exe %~dp0applicationHost.config %windir%\Microsoft.NET\Framework\v4.0.30319\Config\web.config %PORT%
     ) ELSE (
-        %~dp0\iishwcx64.exe %~dp0applicationHost.config %~dp0rootWeb2064.config %PORT%
+        %~dp0\iishwcx64.exe %~dp0applicationHost.config %windir%\Microsoft.NET\Framework\v2.0.50727\Config\web.config %PORT%
     )
 ) ELSE (
     IF %version% EQU 40 (
-        %~dp0\iishwcx86.exe %~dp0applicationHost.config %~dp0rootWeb4086.config %PORT%
+        %~dp0\iishwcx86.exe %~dp0applicationHost.config %windir%\Microsoft.NET\Framework\v4.0.30319\Config\web.config %PORT%
     ) ELSE (
-        %~dp0\iishwcx86.exe %~dp0applicationHost.config %~dp0rootWeb2086.config %PORT%
+        %~dp0\iishwcx86.exe %~dp0applicationHost.config %windir%\Microsoft.NET\Framework\v2.0.50727\Config\web.config %PORT%
     )
 )
